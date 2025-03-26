@@ -1,0 +1,90 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+#define PROCESSES 5
+#define RESOURCES 4
+
+int allocation[PROCESSES][RESOURCES] = {
+    {2, 0, 0, 1},
+    {3, 1, 2, 1},
+    {2, 1, 0, 3},
+    {1, 3, 1, 2},
+    {1, 4, 3, 2}
+};
+
+int max[PROCESSES][RESOURCES] = {
+    {4, 2, 1, 2},
+    {5, 2, 5, 2},
+    {2, 3, 1, 6},
+    {1, 4, 2, 4},
+    {3, 6, 6, 5}
+};
+
+int available[RESOURCES] = {3, 3, 2, 1};
+
+int need[PROCESSES][RESOURCES];
+bool finish[PROCESSES];
+
+void calculateNeed() {
+    for (int i = 0; i < PROCESSES; i++) {
+        for (int j = 0; j < RESOURCES; j++) {
+            need[i][j] = max[i][j] - allocation[i][j];
+        }
+    }
+}
+
+bool isSafe() {
+    int work[RESOURCES];
+    for (int i = 0; i < RESOURCES; i++) {
+        work[i] = available[i];
+    }
+
+    for (int i = 0; i < PROCESSES; i++) {
+        finish[i] = false;
+    }
+
+    int count = 0;
+    while (count < PROCESSES) {
+        bool found = false;
+        for (int p = 0; p < PROCESSES; p++) {
+            if (finish[p] == false) {
+                int j;
+                for (j = 0; j < RESOURCES; j++) {
+                    if (need[p][j] > work[j]) {
+                        break;
+                    }
+                }
+                if (j == RESOURCES) {
+                    for (int k = 0; k < RESOURCES; k++) {
+                        work[k] += allocation[p][k];
+                    }
+                    finish[p] = true;
+                    found = true;
+                    count++;
+                }
+            }
+        }
+        if (found == false) {
+            return false;
+        }
+    }
+    return true;
+}
+
+int main() {
+    calculateNeed();
+
+    printf("Need Matrix:\n");
+    printf("    A B C D\n");
+    for (int i = 0; i < PROCESSES; i++) {
+        printf("P%d:  %d %d %d %d\n", i, need[i][0], need[i][1], need[i][2], need[i][3]);
+    }
+
+    if (isSafe()) {
+        printf("\nThe system is in a safe state.\n");
+    } else {
+        printf("\nThe system is in an unsafe state.\n");
+    }
+
+    return 0;
+}

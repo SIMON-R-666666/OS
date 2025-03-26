@@ -1,0 +1,86 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+#define PROCESSES 5
+#define RESOURCES 4
+
+int main() {
+    int allocation[PROCESSES][RESOURCES] = {
+        {0, 0, 1, 2},
+        {1, 0, 0, 0},
+        {1, 3, 5, 4},
+        {0, 6, 3, 2},
+        {0, 0, 1, 4}
+    };
+
+    int max[PROCESSES][RESOURCES] = {
+        {0, 0, 1, 2},
+        {1, 7, 5, 0},
+        {2, 3, 5, 6},
+        {0, 6, 5, 2},
+        {0, 6, 5, 6}
+    };
+
+    int available[RESOURCES] = {1, 5, 2, 0};
+
+    int need[PROCESSES][RESOURCES];
+    for (int i = 0; i < PROCESSES; i++) {
+        for (int j = 0; j < RESOURCES; j++) {
+            need[i][j] = max[i][j] - allocation[i][j];
+        }
+    }
+    printf("Need Matrix:\n");
+    for (int i = 0; i < PROCESSES; i++) {
+        for (int j = 0; j < RESOURCES; j++) {
+            printf("%d ", need[i][j]);
+        }
+        printf("\n");
+    }
+    int work[RESOURCES];
+    for (int i = 0; i < RESOURCES; i++) {
+        work[i] = available[i];
+    }
+
+    bool finish[PROCESSES] = {false};
+    int safeSequence[PROCESSES];
+    int safeCount = 0;
+
+    for (int k = 0; k < PROCESSES; k++) {
+        for (int i = 0; i < PROCESSES; i++) {
+            if (finish[i] == false) {
+                int j;
+                for (j = 0; j < RESOURCES; j++) {
+                    if (need[i][j] > work[j]) {
+                        break;
+                    }
+                }
+                if (j == RESOURCES) { 
+                    for (int l = 0; l < RESOURCES; l++) {
+                        work[l] += allocation[i][l];
+                    }
+                    safeSequence[safeCount++] = i;
+                    finish[i] = true;
+                }
+            }
+        }
+    }
+    bool isSafe = true;
+    for (int i = 0; i < PROCESSES; i++) {
+        if (finish[i] == false) {
+            isSafe = false;
+            break;
+        }
+    }
+
+    if (isSafe) {
+        printf("\nSystem is in safe state.\nSafe Sequence: ");
+        for (int i = 0; i < PROCESSES; i++) {
+            printf("P%d ", safeSequence[i]);
+        }
+        printf("\n");
+    } else {
+        printf("\nSystem is in unsafe state.\n");
+    }
+
+    return 0;
+}

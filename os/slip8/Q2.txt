@@ -1,0 +1,66 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+void sstfDiskScheduling(int requests[], int numRequests, int headPosition) {
+    int headMovements = 0;
+    int servedRequests[numRequests];
+    int servedCount = 0;
+    int remainingRequests[numRequests];
+    int remainingCount = numRequests;
+
+    
+    for (int i = 0; i < numRequests; i++) {
+        remainingRequests[i] = requests[i];
+    }
+
+    while (remainingCount > 0) {
+        int shortestSeek = INT_MAX;
+        int shortestSeekIndex = -1;
+
+        for (int i = 0; i < remainingCount; i++) {
+            int seekTime = abs(headPosition - remainingRequests[i]);
+            if (seekTime < shortestSeek) {
+                shortestSeek = seekTime;
+                shortestSeekIndex = i;
+            }
+        }
+
+        headMovements += shortestSeek;
+        headPosition = remainingRequests[shortestSeekIndex];
+        servedRequests[servedCount++] = headPosition;
+
+        
+        for (int i = shortestSeekIndex; i < remainingCount - 1; i++) {
+            remainingRequests[i] = remainingRequests[i + 1];
+        }
+        remainingCount--;
+    }
+
+    printf("Served Request Order: ");
+    for (int i = 0; i < servedCount; i++) {
+        printf("%d ", servedRequests[i]);
+    }
+    printf("\nTotal Head Movements: %d\n", headMovements);
+}
+
+int main() {
+    int numRequests;
+    int headPosition;
+
+    printf("Enter number of disk requests: ");
+    scanf("%d", &numRequests);
+
+    int requests[numRequests];
+    printf("Enter disk request string: ");
+    for (int i = 0; i < numRequests; i++) {
+        scanf("%d", &requests[i]);
+    }
+
+    printf("Enter starting head position: ");
+    scanf("%d", &headPosition);
+
+    sstfDiskScheduling(requests, numRequests, headPosition);
+
+    return 0;
+}

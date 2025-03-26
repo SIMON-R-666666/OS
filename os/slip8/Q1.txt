@@ -1,0 +1,151 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
+#include <string.h>
+
+#define MAX_FILES 100
+#define MAX_FILENAME 20
+
+typedef struct {
+    char filename[MAX_FILENAME];
+    int startBlock;
+    int length;
+} File;
+
+int diskSize;
+bool* bitVector;
+int* freeList;
+int freeListSize;
+File directory[MAX_FILES];
+int numFiles = 0;
+
+void initializeDisk() {
+    printf("Enter the disk size (number of blocks): ");
+    scanf("%d", &diskSize);
+
+    bitVector = (bool*)malloc(diskSize * sizeof(bool));
+    freeList = (int*)malloc(diskSize * sizeof(int));
+
+    srand(time(NULL));
+    freeListSize = 0;
+    for (int i = 0; i < diskSize; i++) {
+        if (rand() % 3 == 0) { 
+            bitVector[i] = true;
+        } else {
+            bitVector[i] = false;
+            freeList[freeListSize++] = i;
+        }
+    }
+}
+
+void showBitVector() {
+    printf("Bit Vector:\n");
+    for (int i = 0; i < diskSize; i++) {
+        printf("%d", bitVector[i]);
+    }
+    printf("\n");
+}
+
+void createNewFile() {
+    if (numFiles >= MAX_FILES) {
+        printf("Directory is full.\n");
+        return;
+    }
+
+    File newFile;
+    printf("Enter filename: ");
+    scanf("%s", newFile.filename);
+
+    int numBlocks;
+    printf("Enter number of blocks required: ");
+    scanf("%d", &numBlocks);
+
+    
+    int startBlock = -1;
+    for (int i = 0; i <= freeListSize - numBlocks; i++) {
+        int j;
+        for (j = 0; j < numBlocks; j++) {
+            if (freeList[i + j] != freeList[i] + j) {
+                break;
+            }
+        }
+        if (j == numBlocks) {
+            startBlock = freeList[i];
+            break;
+        }
+    }
+
+    if (startBlock == -1) {
+        printf("Not enough contiguous free blocks.\n");
+        return;
+    }
+
+    newFile.startBlock = startBlock;
+    newFile.length = numBlocks;
+
+    
+    for (int i = 0; i < numBlocks; i++) {
+        bitVector[startBlock + i] = true;
+    }
+
+    
+    int newFreeListSize = 0;
+    for (int i = 0; i < freeListSize; i++) {
+        if (freeList[i] < startBlock || freeList[i] >= startBlock + numBlocks) {
+            freeList[newFreeListSize++] = freeList[i];
+        }
+    }
+    freeListSize = newFreeListSize;
+
+    directory[numFiles++] = newFile;
+    printf("File '%s' created successfully.\n", newFile.filename);
+}
+
+void showDirectory() {
+    if (numFiles == 0) {
+        printf("Directory is empty.\n");
+        return;
+    }
+
+    printf("Directory:\n");
+    printf("Filename\tStart Block\tLength\n");
+    for (int i = 0; i < numFiles; i++) {
+        printf("%s\t\t%d\t\t%d\n", directory[i].filename, directory[i].startBlock, directory[i].length);
+    }
+}
+
+int main() {
+    initializeDisk();
+
+    int choice;
+    while (1) {
+        printf("\nContiguous File Allocation Simulation\n");
+        printf("1. Show Bit Vector\n");
+        printf("2. Create New File\n");
+        printf("3. Show Directory\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                showBitVector();
+                break;
+            case 2:
+                createNewFile();
+                break;
+            case 3:
+                showDirectory();
+                break;
+            case 4:
+                free(bitVector);
+                free(freeList);
+                return 0;
+            default:
+                printf("Invalid choice.\n");
+        }
+    }
+
+    return 0;
+}

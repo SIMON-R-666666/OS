@@ -1,0 +1,175 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
+
+#define MAX_BLOCKS 1000
+#define MAX_FILES 100
+#define MAX_FILENAME_LENGTH 20
+
+int disk[MAX_BLOCKS];
+int numBlocks;
+
+typedef struct {
+    char filename[MAX_FILENAME_LENGTH];
+    int startBlock;
+    int size;
+} File;
+
+File directory[MAX_FILES];
+int numFiles = 0;
+
+void initializeDisk() {
+    for (int i = 0; i < numBlocks; i++) {
+        disk[i] = 0;
+    }
+
+    srand(time(NULL));
+    int numAllocated = rand() % (numBlocks / 2);
+    for (int i = 0; i < numAllocated; i++) {
+        int blockIndex = rand() % numBlocks;
+        if (disk[blockIndex] == 0) {
+            disk[blockIndex] = -1;
+        } else {
+            i--;
+        }
+    }
+}
+
+void showBitVector() {
+    printf("Bit Vector:\n");
+    for (int i = 0; i < numBlocks; i++) {
+        printf("%d ", disk[i] == 0 ? 0 : 1);
+        if ((i + 1) % 20 == 0) {
+            printf("\n");
+        }
+    }
+    printf("\n");
+}
+
+int allocateBlocks(int size) {
+    int startBlock = -1;
+    int prevBlock = -1;
+    int count = 0;
+
+    for (int i = 0; i < numBlocks; i++) {
+        if (disk[i] == 0) {
+            if (startBlock == -1) {
+                startBlock = i;
+                prevBlock = i;
+                disk[i] = -1; 
+                count++;
+            } else {
+                disk[prevBlock] = i;
+                prevBlock = i;
+                disk[i] = -1; 
+                count++;
+            }
+
+            if (count == size) {
+                return startBlock;
+            }
+        }
+    }
+
+    
+    if (count < size && startBlock != -1) {
+        int currentBlock = startBlock;
+        while (currentBlock != -1) {
+            int nextBlock = disk[currentBlock];
+            disk[currentBlock] = 0;
+            currentBlock = nextBlock;
+        }
+        return -1;
+    }
+
+    return -1;
+}
+
+void createNewFile() {
+    if (numFiles >= MAX_FILES) {
+        printf("Maximum number of files reached.\n");
+        return;
+    }
+
+    char filename[MAX_FILENAME_LENGTH];
+    int fileSize;
+
+    printf("Enter filename: ");
+    scanf("%s", filename);
+
+    printf("Enter file size (number of blocks): ");
+    scanf("%d", &fileSize);
+
+    if (fileSize <= 0) {
+        printf("Invalid file size.\n");
+        return;
+    }
+
+    int startBlock = allocateBlocks(fileSize);
+    if (startBlock != -1) {
+        strcpy(directory[numFiles].filename, filename);
+        directory[numFiles].startBlock = startBlock;
+        directory[numFiles].size = fileSize;
+        numFiles++;
+        printf("File '%s' created successfully. Starting block: %d\n", filename, startBlock);
+    } else {
+        printf("File creation failed. Not enough free blocks.\n");
+    }
+}
+
+void showDirectory() {
+    if (numFiles == 0) {
+        printf("Directory is empty.\n");
+        return;
+    }
+
+    printf("Directory:\n");
+    for (int i = 0; i < numFiles; i++) {
+        printf("Filename: %s, Start Block: %d, Size: %d\n",
+               directory[i].filename, directory[i].startBlock, directory[i].size);
+    }
+}
+
+int main() {
+    int choice;
+
+    printf("Enter the number of disk blocks: ");
+    scanf("%d", &numBlocks);
+
+    if (numBlocks <= 0 || numBlocks > MAX_BLOCKS) {
+        printf("Invalid number of blocks.\n");
+        return 1;
+    }
+
+    initializeDisk();
+
+    do {
+        printf("\nMenu:\n");
+        printf("1. Show Bit Vector\n");
+        printf("2. Create New File\n");
+        printf("3. Show Directory\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                showBitVector();
+                break;
+            case 2:
+                createNewFile();
+                break;
+            case 3:
+                showDirectory();
+                break;
+            case 4:
+                printf("Exiting...\n");
+                break;
+            default:
+                printf("Invalid choice.\n");
+        }
+    } while (choice != 4);
+
+    return 0;
+}

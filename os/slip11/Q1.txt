@@ -1,0 +1,148 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+#define PROCESSES 5
+#define RESOURCES 3
+
+int allocation[PROCESSES][RESOURCES] = {
+    {0, 1, 0},
+    {2, 0, 0},
+    {3, 0, 3},
+    {2, 1, 1},
+    {0, 0, 2}
+};
+
+int max[PROCESSES][RESOURCES] = {
+    {0, 0, 0},
+    {2, 0, 2},
+    {0, 0, 0},
+    {1, 0, 0},
+    {0, 0, 2}
+};
+
+int available[RESOURCES] = {0, 0, 0};
+
+int need[PROCESSES][RESOURCES];
+bool finish[PROCESSES];
+
+void calculateNeed() {
+    for (int i = 0; i < PROCESSES; i++) {
+        for (int j = 0; j < RESOURCES; j++) {
+            need[i][j] = max[i][j] - allocation[i][j];
+        }
+    }
+}
+
+void displayAllocationMax() {
+    printf("\nAllocation Matrix:\n");
+    printf("    A B C\n");
+    for (int i = 0; i < PROCESSES; i++) {
+        printf("P%d:  %d %d %d\n", i, allocation[i][0], allocation[i][1], allocation[i][2]);
+    }
+
+    printf("\nMax Matrix:\n");
+    printf("    A B C\n");
+    for (int i = 0; i < PROCESSES; i++) {
+        printf("P%d:  %d %d %d\n", i, max[i][0], max[i][1], max[i][2]);
+    }
+}
+
+void displayNeed() {
+    calculateNeed();
+    printf("\nNeed Matrix:\n");
+    printf("    A B C\n");
+    for (int i = 0; i < PROCESSES; i++) {
+        printf("P%d:  %d %d %d\n", i, need[i][0], need[i][1], need[i][2]);
+    }
+}
+
+void displayAvailable() {
+    printf("\nAvailable Resources:\n");
+    printf("A: %d, B: %d, C: %d\n", available[0], available[1], available[2]);
+}
+
+bool isSafe() {
+    int work[RESOURCES];
+    for (int i = 0; i < RESOURCES; i++) {
+        work[i] = available[i];
+    }
+
+    for (int i = 0; i < PROCESSES; i++) {
+        finish[i] = false;
+    }
+
+    int count = 0;
+    while (count < PROCESSES) {
+        bool found = false;
+        for (int p = 0; p < PROCESSES; p++) {
+            if (finish[p] == false) {
+                int j;
+                for (j = 0; j < RESOURCES; j++) {
+                    if (need[p][j] > work[j]) {
+                        break;
+                    }
+                }
+                if (j == RESOURCES) {
+                    for (int k = 0; k < RESOURCES; k++) {
+                        work[k] += allocation[p][k];
+                    }
+                    finish[p] = true;
+                    found = true;
+                    count++;
+                }
+            }
+        }
+        if (found == false) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void acceptAvailable() {
+    printf("Enter available resources (A B C): ");
+    scanf("%d %d %d", &available[0], &available[1], &available[2]);
+}
+
+int main() {
+    int choice;
+
+    while (1) {
+        printf("\nBanker's Algorithm Menu:\n");
+        printf("1. Accept Available Resources\n");
+        printf("2. Display Allocation and Max Matrices\n");
+        printf("3. Display Need Matrix\n");
+        printf("4. Display Available Resources\n");
+        printf("5. Check if Safe State\n");
+        printf("6. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                acceptAvailable();
+                break;
+            case 2:
+                displayAllocationMax();
+                break;
+            case 3:
+                displayNeed();
+                break;
+            case 4:
+                displayAvailable();
+                break;
+            case 5:
+                if (isSafe()) {
+                    printf("System is in a safe state.\n");
+                } else {
+                    printf("System is in an unsafe state.\n");
+                }
+                break;
+            case 6:
+                return 0;
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    }
+    return 0;
+}

@@ -1,0 +1,70 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+int main() {
+    int numRequests;
+    int currentHead;
+    int totalHeadMovements = 0;
+    int direction; 
+
+    printf("Enter the number of disk requests: ");
+    scanf("%d", &numRequests);
+
+    int requests[numRequests];
+    int served[numRequests];
+    int servedOrder[numRequests];
+
+    printf("Enter the disk request string (separated by spaces): ");
+    for (int i = 0; i < numRequests; i++) {
+        scanf("%d", &requests[i]);
+        served[i] = 0;
+    }
+
+    printf("Enter the current head position: ");
+    scanf("%d", &currentHead);
+
+    printf("Enter the direction (0 for left, 1 for right): ");
+    scanf("%d", &direction);
+
+    for (int i = 0; i < numRequests; i++) {
+        int shortestDistance = INT_MAX;
+        int shortestIndex = -1;
+
+        for (int j = 0; j < numRequests; j++) {
+            if (served[j] == 0) {
+                int distance = requests[j] - currentHead;
+                if (direction == 1) {
+                    if (distance >= 0 && distance < shortestDistance) {
+                        shortestDistance = distance;
+                        shortestIndex = j;
+                    }
+                } else {
+                    if (distance <= 0 && abs(distance) < abs(shortestDistance)) {
+                        shortestDistance = distance;
+                        shortestIndex = j;
+                    }
+                }
+            }
+        }
+
+        if (shortestIndex == -1) {
+            direction = 1 - direction;
+            i--;
+            continue;
+        }
+
+        served[shortestIndex] = 1;
+        servedOrder[i] = requests[shortestIndex];
+        totalHeadMovements += abs(shortestDistance);
+        currentHead = requests[shortestIndex];
+    }
+
+    printf("\nOrder Served: ");
+    for (int i = 0; i < numRequests; i++) {
+        printf("%d ", servedOrder[i]);
+    }
+    printf("\nTotal Head Movements: %d\n", totalHeadMovements);
+
+    return 0;
+}

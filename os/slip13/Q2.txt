@@ -1,0 +1,94 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+void sortRequests(int requests[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (requests[i] > requests[j]) {
+                int temp = requests[i];
+                requests[i] = requests[j];
+                requests[j] = temp;
+            }
+        }
+    }
+}
+
+void SCAN(int requests[], int n, int head, int direction, int disk_size) {
+    int totalHeadMovement = 0;
+    int distance, curTrack;
+    sortRequests(requests, n);
+    int left[n], right[n];
+    int leftCount = 0, rightCount = 0;
+    for (int i = 0; i < n; i++) {
+        if (requests[i] < head) {
+            left[leftCount++] = requests[i];
+        } else {
+            right[rightCount++] = requests[i];
+        }
+    }
+    if (direction == 0) {
+        for (int i = leftCount - 1; i >= 0; i--) {
+            curTrack = left[i];
+            distance = abs(curTrack - head);
+            totalHeadMovement += distance;
+            head = curTrack;
+            printf("%d ", curTrack);
+        }
+        totalHeadMovement += abs(head - 0); 
+        head = 0;
+        for (int i = 0; i < rightCount; i++) {
+            curTrack = right[i];
+            distance = abs(curTrack - head);
+            totalHeadMovement += distance;
+            head = curTrack;
+            printf("%d ", curTrack);
+        }
+
+    } else { 
+        for (int i = 0; i < rightCount; i++) {
+            curTrack = right[i];
+            distance = abs(curTrack - head);
+            totalHeadMovement += distance;
+            head = curTrack;
+            printf("%d ", curTrack);
+        }
+        totalHeadMovement += abs(head - (disk_size - 1)); 
+        head = disk_size - 1;
+        for (int i = leftCount - 1; i >= 0; i--) {
+            curTrack = left[i];
+            distance = abs(curTrack - head);
+            totalHeadMovement += distance;
+            head = curTrack;
+            printf("%d ", curTrack);
+        }
+    }
+
+    printf("\nTotal Head Movements: %d\n", totalHeadMovement);
+}
+
+int main() {
+    int n, head, direction, disk_size;
+    printf("Enter the total number of disk blocks: ");
+    scanf("%d", &disk_size);
+
+    printf("Enter the total number of requests: ");
+    scanf("%d", &n);
+
+    int requests[n];
+    
+    printf("Enter the disk request string:\n");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &requests[i]);
+    }
+
+    printf("Enter the starting head position: ");
+    scanf("%d", &head);
+
+    printf("Enter the direction (0 for left, 1 for right): ");
+    scanf("%d", &direction);
+
+    printf("Disk requests served in the following order: ");
+    SCAN(requests, n, head, direction, disk_size);
+
+    return 0;
+}

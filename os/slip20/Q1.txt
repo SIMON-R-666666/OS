@@ -1,0 +1,111 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <limits.h>
+
+void scanDiskScheduling(int requests[], int numRequests, int headPosition, bool direction, int diskSize) {
+    int headMovements = 0;
+    int servedRequests[numRequests + 2]; 
+    int servedCount = 0;
+    int remainingRequests[numRequests + 2];
+    int remainingCount = numRequests;
+    for (int i = 0; i < numRequests; i++) {
+        remainingRequests[i] = requests[i];
+    }
+    remainingRequests[remainingCount++] = 0;
+    remainingRequests[remainingCount++] = diskSize - 1;
+    for (int i = 0; i < remainingCount - 1; i++) {
+        for (int j = 0; j < remainingCount - i - 1; j++) {
+            if (remainingRequests[j] > remainingRequests[j + 1]) {
+                int temp = remainingRequests[j];
+                remainingRequests[j] = remainingRequests[j + 1];
+                remainingRequests[j + 1] = temp;
+            }
+        }
+    }
+
+    if (direction) { 
+        int i;
+        for (i = 0; i < remainingCount; i++) {
+            if (remainingRequests[i] >= headPosition) {
+                break;
+            }
+        }
+
+        for (int j = i; j < remainingCount; j++) {
+            headMovements += abs(headPosition - remainingRequests[j]);
+            headPosition = remainingRequests[j];
+            servedRequests[servedCount++] = headPosition;
+        }
+
+        for (int j = i - 1; j >= 0; j--) {
+            headMovements += abs(headPosition - remainingRequests[j]);
+            headPosition = remainingRequests[j];
+            servedRequests[servedCount++] = headPosition;
+        }
+    } else { 
+        int i;
+        for (i = 0; i < remainingCount; i++) {
+            if (remainingRequests[i] > headPosition) {
+                break;
+            }
+        }
+
+        for (int j = i - 1; j >= 0; j--) {
+            headMovements += abs(headPosition - remainingRequests[j]);
+            headPosition = remainingRequests[j];
+            servedRequests[servedCount++] = headPosition;
+        }
+
+        for (int j = i; j < remainingCount; j++) {
+            headMovements += abs(headPosition - remainingRequests[j]);
+            headPosition = remainingRequests[j];
+            servedRequests[servedCount++] = headPosition;
+        }
+    }
+
+    printf("Served Request Order: ");
+    for (int i = 0; i < servedCount; i++) {
+        printf("%d ", servedRequests[i]);
+    }
+    printf("\nTotal Head Movements: %d\n", headMovements);
+}
+
+int main() {
+    int numRequests;
+    int headPosition;
+    bool direction;
+    int diskSize;
+    char dirInput[10];
+
+    printf("Enter total number of disk blocks: ");
+    scanf("%d", &diskSize);
+
+    printf("Enter number of disk requests: ");
+    scanf("%d", &numRequests);
+
+    int requests[numRequests];
+    printf("Enter disk request string: ");
+    for (int i = 0; i < numRequests; i++) {
+        scanf("%d", &requests[i]);
+    }
+
+    printf("Enter starting head position: ");
+    scanf("%d", &headPosition);
+
+    printf("Enter direction (right or left): ");
+    scanf("%s", dirInput);
+
+    if (strcmp(dirInput, "right") == 0) {
+        direction = true;
+    } else if (strcmp(dirInput, "left") == 0) {
+        direction = false;
+    } else {
+        printf("Invalid direction input. Exiting.\n");
+        return 1;
+    }
+
+    scanDiskScheduling(requests, numRequests, headPosition, direction, diskSize);
+
+    return 0;
+}

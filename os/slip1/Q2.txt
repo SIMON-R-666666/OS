@@ -1,0 +1,32 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    int request_queue[100]; 
+    int head_position, num_requests, i;
+    int total_head_movements = 0;
+
+    printf("Enter the number of disk requests: ");
+    scanf("%d", &num_requests);
+
+    printf("Enter the disk request sequence: ");
+    for (i = 0; i < num_requests; i++) {
+        scanf("%d", &request_queue[i]);
+    }
+
+    printf("Enter the initial head position: ");
+    scanf("%d", &head_position);
+
+    printf("\nFCFS Disk Scheduling:\n");
+    printf("Request Served Order: ");
+
+    for (i = 0; i < num_requests; i++) {
+        printf("%d ", request_queue[i]);
+        total_head_movements += abs(request_queue[i] - head_position);
+        head_position = request_queue[i];
+    }
+
+    printf("\nTotal Head Movements: %d\n", total_head_movements);
+
+    return 0;
+}

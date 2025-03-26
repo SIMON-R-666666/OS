@@ -1,0 +1,151 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define MAX_BLOCKS 1000
+
+int disk[MAX_BLOCKS];
+int numBlocks;
+
+void initializeDisk() {
+    for (int i = 0; i < numBlocks; i++) {
+        disk[i] = 0; 
+    }
+    srand(time(NULL));
+    int numAllocated = rand() % (numBlocks / 2);
+    for (int i = 0; i < numAllocated; i++) {
+        int blockIndex = rand() % numBlocks;
+        if (disk[blockIndex] == 0) {
+            disk[blockIndex] = 1;
+        } else {
+            i--;
+        }
+    }
+}
+
+void showBitVector() {
+    printf("Bit Vector:\n");
+    for (int i = 0; i < numBlocks; i++) {
+        printf("%d ", disk[i]);
+        if ((i + 1) % 20 == 0) {
+            printf("\n");
+        }
+    }
+    printf("\n");
+}
+
+int allocateFile(int fileSize) {
+    int startBlock = -1;
+    int consecutiveFreeBlocks = 0;
+
+    for (int i = 0; i < numBlocks; i++) {
+        if (disk[i] == 0) {
+            if (consecutiveFreeBlocks == 0) {
+                startBlock = i; 
+            }
+            consecutiveFreeBlocks++;
+
+            if (consecutiveFreeBlocks == fileSize) {
+                for (int j = startBlock; j < startBlock + fileSize; j++) {
+                    disk[j] = 1; 
+                }
+                return startBlock; 
+            }
+        } else {
+            consecutiveFreeBlocks = 0;
+            startBlock = -1;
+        }
+    }
+
+    return -1;
+}
+
+void deleteFile() {
+    int startBlock, fileSize;
+
+    printf("Enter the starting block of the file: ");
+    scanf("%d", &startBlock);
+
+    printf("Enter the size of the file: ");
+    scanf("%d", &fileSize);
+
+    if (startBlock < 0 || startBlock >= numBlocks || startBlock + fileSize > numBlocks) {
+        printf("Invalid file information.\n");
+        return;
+    }
+
+    int validDelete = 1;
+    for(int i = startBlock; i < startBlock + fileSize; i++){
+        if(disk[i] == 0){
+            validDelete = 0;
+            break;
+        }
+    }
+
+    if(validDelete == 0){
+        printf("File cannot be deleted, some blocks are already free.\n");
+        return;
+    }
+
+    for (int i = startBlock; i < startBlock + fileSize; i++) {
+        disk[i] = 0;
+    }
+    printf("File deleted successfully.\n");
+}
+
+int main() {
+    int choice;
+
+    printf("Enter the number of disk blocks: ");
+    scanf("%d", &numBlocks);
+
+    if (numBlocks <= 0 || numBlocks > MAX_BLOCKS) {
+        printf("Invalid number of blocks.\n");
+        return 1;
+    }
+
+    initializeDisk();
+
+    do {
+        printf("\nMenu:\n");
+        printf("1. Show Bit Vector\n");
+        printf("2. Allocate File\n");
+        printf("3. Delete File\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                showBitVector();
+                break;
+            case 2:
+                {
+                    int fileSize;
+                    printf("Enter the file size (number of blocks): ");
+                    scanf("%d", &fileSize);
+                    if(fileSize <= 0){
+                        printf("Invalid file size.\n");
+                        break;
+                    }
+                    int startBlock = allocateFile(fileSize);
+                    if (startBlock != -1) {
+                        printf("File allocated successfully. Starting block: %d\n", startBlock);
+                    } else {
+                        printf("File allocation failed. Not enough consecutive free blocks.\n");
+                    }
+                }
+                break;
+            case 3:
+                deleteFile();
+                break;
+            case 4:
+                printf("Exiting...\n");
+                break;
+            default:
+                printf("Invalid choice.\n");
+        }
+    } while (choice != 4);
+
+    return 0;
+}
