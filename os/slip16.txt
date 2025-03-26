@@ -1,0 +1,156 @@
+Q1
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#define MAX_FILES 10
+#define MAX_BLOCKS 100
+int bitVector[MAX_BLOCKS];
+int directory[MAX_FILES][MAX_BLOCKS];
+int fileStart[MAX_FILES];
+int fileCount = 0;
+void initializeDisk(int n) 
+{
+    srand(time(0));
+    for (int i = 0; i < n; i++) 
+    {
+        bitVector[i] = 0; // Initialize all blocks to free
+    }
+}
+void showBitVector(int n) 
+{
+    printf("Bit Vector: ");
+    for (int i = 0; i < n; i++) 
+    {
+        printf("%d ", bitVector[i]);
+    }
+    printf("\n");
+}
+void createNewFile(int n) 
+{
+    if (fileCount >= MAX_FILES) 
+    {
+        printf("Directory full! Cannot create more files.\n");
+        return;
+    }
+    int fileSize, block;
+    printf("Enter file size: ");
+    scanf("%d", &fileSize);
+    if (fileSize > n) {
+        printf("File size too large.\n");
+        return;
+    }
+    int freeBlocks = 0;
+    for (int i = 0; i < n; i++) 
+    {
+        if (bitVector[i] == 0)
+            freeBlocks++;
+    }
+    if (freeBlocks < fileSize) {
+        printf("Not enough free blocks available.\n");
+        return;
+    }
+    int startBlock = -1;
+    int index = 0;
+    for (int i = 0; i < n && index < fileSize; i++) 
+    {
+        if (bitVector[i] == 0) 
+        {
+            if (startBlock == -1) 
+                startBlock = i;
+            directory[fileCount][index++] = i;
+            bitVector[i] = 1;
+        }
+    }
+    fileStart[fileCount] = startBlock;
+    printf("File created with starting block %d\n", startBlock);
+    fileCount++;
+}
+void showDirectory() 
+{
+    printf("Directory:\n");
+    for (int i = 0; i < fileCount; i++) 
+    {
+        printf("File %d: ", i + 1);
+        for (int j = 0; directory[i][j] != -1 && j < MAX_BLOCKS; j++)
+        {
+            printf("%d ", directory[i][j]);
+        }
+        printf("\n");
+    }
+}
+int main() 
+{
+    int n, choice;
+    printf("Enter total number of blocks: ");
+    scanf("%d", &n);
+    initializeDisk(n);
+    while (1) 
+    {
+        printf("\nMenu:\n");
+        printf("1. Show Bit Vector\n");
+        printf("2. Create New File\n");
+        printf("3. Show Directory\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+        switch (choice) 
+        {
+            case 1:
+                showBitVector(n);
+                break;
+            case 2:
+                createNewFile(n);
+                break;
+            case 3:
+                showDirectory();
+                break;
+            case 4:
+                exit(0);
+            default:
+                printf("Invalid choice!\n");
+        }
+    }
+    return 0;
+}
+
+
+Q2
+#include <mpi.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#define ARRAY_SIZE 1000
+int main(int argc, char *argv[]) 
+{
+    int rank, size, i;
+    int numbers[ARRAY_SIZE], local_min, global_min;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    if (rank == 0) 
+    {
+        srand(time(NULL));
+        for (i = 0; i < ARRAY_SIZE; i++) 
+        {
+            numbers[i] = rand() % 100;
+        }
+    }
+    int chunk_size = ARRAY_SIZE / size;
+    int local_numbers[chunk_size];
+    MPI_Scatter(numbers, chunk_size, MPI_INT, local_numbers, chunk_size, MPI_INT, 0, MPI_COMM_WORLD);
+    local_min = local_numbers[0];
+    for (i = 1; i < chunk_size; i++) 
+    {
+        if (local_numbers[i] < local_min) 
+        {
+            local_min = local_numbers[i];
+        }
+    }
+    MPI_Reduce(&local_min, &global_min, 1, MPI_INT, MPI_MIN, 0, MPI_COMM_WORLD);
+    if (rank == 0) 
+    {
+        printf("Minimum number among 1000 numbers: %d\n", global_min);
+    }
+    MPI_Finalize();
+    return 0;
+}
